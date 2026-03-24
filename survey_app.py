@@ -1,7 +1,7 @@
-import json
 import streamlit as st
 import pandas as pd
 import gspread
+import json
 from datetime import datetime
 
 # 1. Налаштування логіки опитувальника
@@ -14,7 +14,6 @@ SUBSCALES = {
     "Соціальний (С)": list(range(46, 61))
 }
 
-# Повний словник з 60 тверджень
 questions = {
     1: "Я чітко усвідомлюю, яку роль відіграє моя служба у досягненні стратегічних цілей підрозділу та країни в цілому.",
     2: "Виконання бойових завдань має для мене особистий сенс, пов'язаний із моїми глибинними цінностями.",
@@ -78,7 +77,6 @@ questions = {
     60: "Відсутність підтримки з боку командирів суттєво підриває мою готовність докладати максимум зусиль."
 }
 
-# 2. Функції обчислення та збереження
 def calculate_score(answers):
     scores = {}
     total_score = 0
@@ -111,15 +109,11 @@ def get_level(score, is_total=False):
         else: return "Низький"
 
 def save_to_google_sheet(answers, scores):
-    def save_to_google_sheet(answers, scores):
     try:
-        # Перевіряємо, де ми знаходимось: на сервері чи на комп'ютері
         if "gcp_json" in st.secrets:
-            # Якщо на сервері Streamlit - беремо ключ із секретних налаштувань
             creds_dict = json.loads(st.secrets["gcp_json"])
             gc = gspread.service_account_from_dict(creds_dict)
         else:
-            # Якщо локально - беремо з файлу
             gc = gspread.service_account(filename='credentials.json')
         
         sh = gc.open("База_ШОПМ")
@@ -145,7 +139,6 @@ def save_to_google_sheet(answers, scores):
         st.error(f"Помилка збереження в базу даних: {e}")
         return False
 
-# 3. Інтерфейс програми
 st.title("Шкала оцінювання професійної мотивації (ШОПМ-ОТ-СВ)")
 st.write("Шановний офіцере! Перед Вами низка тверджень, що стосуються різних аспектів Вашої службової діяльності.")
 st.write("**1** - Абсолютно не згоден(а) | **2** - Скоріше не згоден(а) | **3** - Важко відповісти | **4** - Скоріше згоден(а) | **5** - Повністю згоден(а)")
@@ -158,18 +151,16 @@ with st.form("survey_form"):
         answers[i] = st.radio(
             f"**{i}.** {questions[i]}",
             options=[1, 2, 3, 4, 5],
-            index=2, # За замовчуванням "Важко відповісти" (3)
+            index=2,
             horizontal=True
         )
     
     st.markdown("---")
     submitted = st.form_submit_button("Завершити та розрахувати")
 
-# 4. Виведення результатів та збереження
 if submitted:
     results = calculate_score(answers)
     
-    # Спроба зберегти в Google Таблицю
     if save_to_google_sheet(answers, results):
         st.success("Відповіді успішно збережено в онлайн-базу даних!")
     
